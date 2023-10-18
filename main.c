@@ -31,71 +31,71 @@ FILE *railway_car;
 //FILE *red_delivery;
 
 void Blueput (int part_number) {
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);          // set lock
     
-    while (b_count >= CONVEYOR_BLUE) {
+    while (b_count >= CONVEYOR_BLUE) {              // if conveyor is full wait
         pthread_cond_wait(&blue_not_full, &lock);
     }
     
-    sequence++;
-    blue_buffer[b_back] = part_number;
-    b_back = (b_back + 1) % CONVEYOR_BLUE;
-    b_count++;
+    sequence++;             
+    blue_buffer[b_back] = part_number;          // store part number in buffer
+    b_back = (b_back + 1) % CONVEYOR_BLUE;      // increment back pointer
+    b_count++;                
 
-    pthread_cond_signal(&blue_not_empty);
-    pthread_mutex_unlock(&lock);
+    pthread_cond_signal(&blue_not_empty);       // signal not empty
+    pthread_mutex_unlock(&lock);              // release lock
 }
 
 void Redput (int part_number) {
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);          // set lock
     
-    while (r_count >= CONVEYOR_RED) {
+    while (r_count >= CONVEYOR_RED) {               // if conveyor is full wait
         pthread_cond_wait(&red_not_full, &lock);
     }
     
-    sequence++;
-    red_buffer[r_back] = part_number;
-    r_back = (r_back + 1) % CONVEYOR_BLUE;
-    r_count++;
+    sequence++;                        
+    red_buffer[r_back] = part_number;       // store part number in buffer
+    r_back = (r_back + 1) % CONVEYOR_BLUE;          // increment back pointer
+    r_count++;  
 
-    pthread_cond_signal(&red_not_empty);
-    pthread_mutex_unlock(&lock);
+    pthread_cond_signal(&red_not_empty);        // signal not empty
+    pthread_mutex_unlock(&lock);        // release lock
 }
 
 int Blueget() {
-    int part_number;
+    int part_number;                // initialize part number
 
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);              // set lock
 
-    while (b_count <= 0) {
+    while (b_count <= 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&blue_not_empty, &lock);
     }
 
-    part_number = blue_buffer[b_front];
-    b_front = (b_front + 1) % CONVEYOR_BLUE;
+    part_number = blue_buffer[b_front];            // retrieve part number from buffer
+    b_front = (b_front + 1) % CONVEYOR_BLUE;        // increment front pointer
     b_count--;
 
-    pthread_cond_signal(&blue_not_full);
-    pthread_mutex_unlock(&lock);
+    pthread_cond_signal(&blue_not_full);        // signal not full
+    pthread_mutex_unlock(&lock);        // release lock
 
     return part_number;
 }
 
 int Redget() {
-    int part_number;
+    int part_number;            // initialize part number
 
-    pthread_mutex_lock(&lock);
+    pthread_mutex_lock(&lock);      // set lock
 
-    while (r_count <= 0) {
+    while (r_count <= 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&blue_not_empty, &lock);
     }
 
-    part_number = blue_buffer[r_front];
-    r_front = (r_front + 1) % CONVEYOR_RED;
+    part_number = blue_buffer[r_front];         // retrieve part number from buffer
+    r_front = (r_front + 1) % CONVEYOR_RED;         // increment front pointer
     r_count--;
 
-    pthread_cond_signal(&blue_not_full);
-    pthread_mutex_unlock(&lock);
+    pthread_cond_signal(&blue_not_full);            // signal not full
+    pthread_mutex_unlock(&lock);                // release lock
 
     return part_number;
 }
@@ -156,6 +156,12 @@ void threadY() {
 
 int main(int argc, char *argv[]) {
 
+    pthread_t threadL, threadR, threadX, threadY;
+
+    pthread_create(&threadL, NULL, &threadL, NULL);
+    pthread_create(&threadR, NULL, &threadR, NULL);
+    pthread_create(&threadX, NULL, &threadX, NULL);
+    pthread_create(&threadY, NULL, &threadY, NULL);
 
 return 0;
 
