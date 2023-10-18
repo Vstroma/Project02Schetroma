@@ -27,8 +27,8 @@ int buffer[BUFFER_SIZE];
 int sequence = 0;
 
 FILE *railway_car;
-FILE *blue_delivery;
-FILE *red_delivery;
+//FILE *blue_delivery;
+//FILE *red_delivery;
 
 void Blueput (int part_number) {
     pthread_mutex_lock(&lock);
@@ -102,12 +102,48 @@ int Redget() {
 
 
 void *threadL(void *arg) {
+    int part_number;
 
+        while (fscanf(railway_car, "%d", &part_number) == 1) {
+            if (part_number == -1) {        // if it is EOF
+                Redput(-1);
+                Blueput(-1);
+                break;
+            }
+        
+            if (part_number >= 1 && part_number <= 12)  // move to conveyor Blue
 
+                Blueput(part_number);
+            } else {                    // moves to conveyor Red
+                Redput(part_number);
+            }
+        usleep(250000);         // delay of.25 secomnds
+    }
+
+    return NULL;
 }
 
-void threadR() {
+void *threadR(void *arg) {
+    int part_number;
 
+    while (fscanf(railway_car, "%d", &part_number) == 1) {
+        if (part_number == -1) {        // if it is EOF
+            Blueput(-1);
+            Redput(-1);     
+            break;
+        }
+        
+        if (part_number >= 13 && part_number <= 25) {       // moves to conveyor Red
+          
+            Redput(part_number);
+        } else {                // moves to conveyor Blue
+
+            Blueput(part_number);
+        }
+        usleep(500000);     // delay of .50 seconds
+    }
+
+    return NULL;
 }
 
 void threadX() {
