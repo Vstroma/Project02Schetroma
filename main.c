@@ -36,7 +36,17 @@ FILE *railway_car;
 //FILE *blue_delivery;
 //FILE *red_delivery;
 
-void Blueput (int part_number) {
+void Blueput(int part_number);
+void Redput (int part_number);
+int Blueget();
+int Redget();
+void *threadL(void *arg);
+void *threadR(void *arg);
+void threadX(void *arg);
+void threadY(void *arg);
+
+
+void Blueput(int part_number) {
     pthread_mutex_lock(&lock);          // set lock
     
     while (b_count >= CONVEYOR_BLUE) {              // if conveyor is full wait
@@ -160,7 +170,7 @@ void threadX(void *arg) {
     int part_number;
     while (1) {
         part_number = Blueget();
-        if (part_number == -1) {
+        if (part_number == -1) {        // exit when -1
             break;
         }
         usleep(200000); // process time
@@ -173,7 +183,7 @@ void threadY() {
     int part_number;
     while(1) {
         part_number = Redget();
-        it (part == -1) {
+        it (part == -1) {           // exit when -1
             break;
         }
         usleep(200000); // process time
@@ -186,12 +196,12 @@ int main(int argc, char *argv[]) {
 
     pthread_t threadL, threadR, threadX, threadY;
 
-    pthread_create(&threadL, NULL, &threadL, NULL);
+    pthread_create(&threadL, NULL, &threadL, NULL);     // create blue and red threads
     pthread_create(&threadR, NULL, &threadR, NULL);
     pthread_create(&threadX, NULL, &threadX, NULL);
     pthread_create(&threadY, NULL, &threadY, NULL);
 
-    pthread_join(threadL, NULL);
+    pthread_join(threadL, NULL);            // wait for threads to finish
     pthread_join(threadR, NULL);
     pthread_join(threadX, NULL);
     pthread_join(threadY, NULL);
