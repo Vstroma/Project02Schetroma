@@ -4,7 +4,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <stdbooh.h>
+#include <stdbool.h>
 
 #define CONVEYOR_BLUE 15
 #define CONVEYOR_RED 10
@@ -14,14 +14,20 @@ pthread_mutex_t lock;
 pthread_cond_t blue_not_full, blue_not_empty;
 pthread_cond_t red_not_full, red_not_empty;
 
-int blue_buffer[CONVEYOR_BLUE]
-int red_buffer[CONVEYOR_RED]
+int blue_belt[CONVEYOR_BLUE]
+int red_belt[CONVEYOR_RED]
 int b_front = 0, b_back = 0, b_count = 0;
 int r_front = 0, r_back = 0, r_count = 0;
 int fill_ptr = 0;
 int use_ptr = 0;
 int count = 0;
 
+pthread_mutex_t blueBeltLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t blueBeltNotEmpty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t blueBeltNotFull = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t redBeltLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t redBeltNotEmpty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t redBeltNotFull = PTHREAD_COND_INITIALIZER;
 
 int buffer[BUFFER_SIZE];
 int sequence = 0;
@@ -114,11 +120,13 @@ void *threadL(void *arg) {
             if (part_number >= 1 && part_number <= 12)  // move to conveyor Blue
 
                 Blueput(part_number);
+                usleep(250000);         // delay of.25 secomnds
             } else {                    // moves to conveyor Red
                 Redput(part_number);
+                usleep(250000);         // delay of.25 secomnds
             }
-        usleep(250000);         // delay of.25 secomnds
-    }
+        //usleep(250000);         // delay of.25 secomnds
+    
 
     return NULL;
 }
@@ -136,11 +144,13 @@ void *threadR(void *arg) {
         if (part_number >= 13 && part_number <= 25) {       // moves to conveyor Red
           
             Redput(part_number);
+            usleep(250000);         // delay of.25 secomnds
         } else {                // moves to conveyor Blue
 
             Blueput(part_number);
+            usleep(250000);         // delay of.25 secomnds
         }
-        usleep(500000);     // delay of .50 seconds
+        //usleep(500000);     // delay of .50 seconds
     }
 
     return NULL;
@@ -162,6 +172,13 @@ int main(int argc, char *argv[]) {
     pthread_create(&threadR, NULL, &threadR, NULL);
     pthread_create(&threadX, NULL, &threadX, NULL);
     pthread_create(&threadY, NULL, &threadY, NULL);
+
+    pthread_join(threadL, NULL);
+    pthread_join(threadR, NULL);
+    pthread_join(threadX, NULL);
+    pthread_join(threadY, NULL);
+
+
 
 return 0;
 
