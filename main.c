@@ -156,12 +156,30 @@ void *threadR(void *arg) {
     return NULL;
 }
 
-void threadX() {
+void threadX(void *arg) {
+    int part_number;
+    while (1) {
+        part_number = Blueget();
+        if (part_number == -1) {
+            break;
+        }
+        usleep(200000); // process time
+    }
+    return NULL;
 
 }
 
 void threadY() {
+    int part_number;
+    while(1) {
+        part_number = Redget();
+        it (part == -1) {
+            break;
+        }
+        usleep(200000); // process time
+    }
 
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
