@@ -4,22 +4,18 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 #define CONVEYOR_BLUE 15
 #define CONVEYOR_RED 10
-#define BUFFER_SIZE 100
+#define PARTS 25
 
-pthread_mutex_t lock;
-pthread_cond_t blue_not_full, blue_not_empty;
-pthread_cond_t red_not_full, red_not_empty;
 
 int blue_belt[CONVEYOR_BLUE]
 int red_belt[CONVEYOR_RED]
-int b_front = 0, b_back = 0, b_count = 0;
-int r_front = 0, r_back = 0, r_count = 0;
-int fill_ptr = 0;
-int use_ptr = 0;
+int b_count = 0;
+int r_count = 0;
+//int fill_ptr = 0;
+//int use_ptr = 0;
 int count = 0;
 
 pthread_mutex_t blueBeltLock = PTHREAD_MUTEX_INITIALIZER;
@@ -29,12 +25,11 @@ pthread_mutex_t redBeltLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t redBeltNotEmpty = PTHREAD_COND_INITIALIZER;
 pthread_cond_t redBeltNotFull = PTHREAD_COND_INITIALIZER;
 
-int buffer[BUFFER_SIZE];
+//int buffer[BUFFER_SIZE];
 int sequence = 0;
 
-FILE *railway_car;
-//FILE *blue_delivery;
-//FILE *red_delivery;
+FILE *blue_delivery;
+FILE *red_delivery;
 
 void Blueput(int part_number);
 void Redput (int part_number);
@@ -44,6 +39,7 @@ void *threadL(void *arg);
 void *threadR(void *arg);
 void threadX(void *arg);
 void threadY(void *arg);
+void writePart(char filename[], int part, int sequence);
 
 
 void Blueput(int part_number) {
@@ -201,12 +197,16 @@ int main(int argc, char *argv[]) {
     pthread_create(&threadX, NULL, &threadX, NULL);
     pthread_create(&threadY, NULL, &threadY, NULL);
 
+    blueDelivery = fopen("BLUE_DELIVERY.txt", "w");
+    redDelivery = fopen("RED_DELIVERY.txt", "w");
+
     pthread_join(threadL, NULL);            // wait for threads to finish
     pthread_join(threadR, NULL);
     pthread_join(threadX, NULL);
     pthread_join(threadY, NULL);
 
-
+    fclose(blueDelivery);
+    fclose(redDelivery);
 
 return 0;
 
