@@ -10,6 +10,7 @@
 #define PARTS 25
 
 
+
 int blue_belt[CONVEYOR_BLUE]
 int red_belt[CONVEYOR_RED]
 int b_count = 0;
@@ -18,14 +19,21 @@ int r_count = 0;
 //int use_ptr = 0;
 int count = 0;
 
-pthread_mutex_t blueBeltLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t blueBeltNotEmpty = PTHREAD_COND_INITIALIZER;
-pthread_cond_t blueBeltNotFull = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t redBeltLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t redBeltNotEmpty = PTHREAD_COND_INITIALIZER;
-pthread_cond_t redBeltNotFull = PTHREAD_COND_INITIALIZER;
+//pthread_mutex_t lock;
+pthread_cond_t blue_not_full, blue_not_empty;
+pthread_cond_t red_not_full, red_not_empty;
 
-//int buffer[BUFFER_SIZE];
+
+pthread_mutex_t blueLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t blueNotEmpty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t blueNotFull = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t redLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t redNotEmpty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t redNotFull = PTHREAD_COND_INITIALIZER;
+
+int blueBelt{CONVEYOR_BLUE};
+int redBelt{CONVEYOR_RED};
+
 int sequence = 0;
 
 FILE *blue_delivery;
@@ -43,52 +51,53 @@ void writePart(char filename[], int part, int sequence);
 
 
 void Blueput(int part_number) {
-    pthread_mutex_lock(&lock);          // set lock
+    pthread_mutex_lock(&blueLock);          // set lock
     
-    while (b_count >= CONVEYOR_BLUE) {              // if conveyor is full wait
-        pthread_cond_wait(&blue_not_full, &lock);
+    while (b_count == CONVEYOR_BLUE) {              // if conveyor is full wait
+        pthread_cond_wait(&blue_not_full, &blueLock);
     }
     
+    blueBelt[b_count] = part_number;
+    b_count++;   
     sequence++;             
-    blue_buffer[b_back] = part_number;          // store part number in buffer
-    b_back = (b_back + 1) % CONVEYOR_BLUE;      // increment back pointer
-    b_count++;                
+    printf("Part added to Blue belt.\n");             
 
     pthread_cond_signal(&blue_not_empty);       // signal not empty
-    pthread_mutex_unlock(&lock);              // release lock
+    pthread_mutex_unlock(&blueLock);              // release lock
 }
 
 void Redput (int part_number) {
-    pthread_mutex_lock(&lock);          // set lock
+    pthread_mutex_lock(&redLock);          // set lock
     
-    while (r_count >= CONVEYOR_RED) {               // if conveyor is full wait
-        pthread_cond_wait(&red_not_full, &lock);
+    while (r_count == CONVEYOR_RED) {               // if conveyor is full wait
+        pthread_cond_wait(&red_not_full, &redLock);
     }
     
-    sequence++;                        
-    red_buffer[r_back] = part_number;       // store part number in buffer
-    r_back = (r_back + 1) % CONVEYOR_BLUE;          // increment back pointer
+    redBelt[r_count] = part_number;
     r_count++;  
+    sequence++;  
+    printf("Part added to Red belt.\n");                      
+
 
     pthread_cond_signal(&red_not_empty);        // signal not empty
-    pthread_mutex_unlock(&lock);        // release lock
+    pthread_mutex_unlock(&redLock);        // release lock
 }
 
 int Blueget() {
     int part_number;                // initialize part number
 
-    pthread_mutex_lock(&lock);              // set lock
+    pthread_mutex_lock(&blueLock);              // set lock
 
     while (b_count <= 0) {                  // if conveyor is empty wait
-        pthread_cond_wait(&blue_not_empty, &lock);
+        pthread_cond_wait(&blue_not_empty, &blueLock);
     }
 
-    part_number = blue_buffer[b_front];            // retrieve part number from buffer
-    b_front = (b_front + 1) % CONVEYOR_BLUE;        // increment front pointer
+    part_number = blueBelt[b_count - 1];            // retrieve part number from buffer
     b_count--;
+    printf("Retrieved part from Blue belt.\n");
 
     pthread_cond_signal(&blue_not_full);        // signal not full
-    pthread_mutex_unlock(&lock);        // release lock
+    pthread_mutex_unlock(&blueLock);        // release lock
 
     return part_number;
 }
@@ -96,17 +105,18 @@ int Blueget() {
 int Redget() {
     int part_number;            // initialize part number
 
-    pthread_mutex_lock(&lock);      // set lock
+    pthread_mutex_lock(&redLock);      // set lock
 
     while (r_count <= 0) {                  // if conveyor is empty wait
-        pthread_cond_wait(&blue_not_empty, &lock);
+        pthread_cond_wait(&red_not_empty, &redLock);
     }
 
-    part_number = blue_buffer[r_front];         // retrieve part number from buffer
-    r_front = (r_front + 1) % CONVEYOR_RED;         // increment front pointer
+    part_number = redBelt[r_count - 1];         // retrieve part number from buffer
     r_count--;
+    printf("Retrieved part from Red belt.\n");
 
-    pthread_cond_signal(&blue_not_full);            // signal not full
+
+    pthread_cond_signal(&red_not_full);            // signal not full
     pthread_mutex_unlock(&lock);                // release lock
 
     return part_number;
