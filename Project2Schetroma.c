@@ -155,19 +155,21 @@ void threadX(void *arg) {
         if (part_number == -1) {        // exit when -1
             break;
         }
+        writePart("Blue_delivery.txt",part_number, sequence);   // write part to blue file 
         usleep(200000); // process time
     }
     return NULL;
 
 }
 
-void threadY() {
+void threadY(void *arg) {
     int part_number;
     while(1) {
         part_number = Redget();
-        it (part == -1) {           // exit when -1
+        it (part_number == -1) {           // exit when -1
             break;
         }
+        writePart("Red_delivery.txt",part_number,sequence);
         usleep(200000); // process time
     }
 
