@@ -88,7 +88,7 @@ int Blueget() {
 
     pthread_mutex_lock(&blueLock);              // set lock
 
-    while (b_count <= 0) {                  // if conveyor is empty wait
+    while (b_count == 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&blue_not_empty, &blueLock);
     }
 
@@ -107,7 +107,7 @@ int Redget() {
 
     pthread_mutex_lock(&redLock);      // set lock
 
-    while (r_count <= 0) {                  // if conveyor is empty wait
+    while (r_count == 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&red_not_empty, &redLock);
     }
 
@@ -117,7 +117,7 @@ int Redget() {
 
 
     pthread_cond_signal(&red_not_full);            // signal not full
-    pthread_mutex_unlock(&lock);                // release lock
+    pthread_mutex_unlock(&redLock);                // release lock
 
     return part_number;
 }
@@ -197,6 +197,18 @@ void threadY() {
 
     return NULL;
 }
+
+// write part to the delivery truck file
+void writePart(char filename[], int part, int sequence) {
+    FILE *deliveryTruckFile = fopen(filename, "a");
+    if (deliveryTruckFile) {
+        fprintf(deliveryTruckFile, "Sequence: %d, Part: %d\n", sequence, part);
+        fclose(deliveryTruckFile);
+    } else {
+        printf("Error: Couldn't open delivery truck file %s\n", filename);
+    }
+}
+
 
 int main(int argc, char *argv[]) {
 
