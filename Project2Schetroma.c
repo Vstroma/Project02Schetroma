@@ -122,53 +122,29 @@ int Redget() {
     return part_number;
 }
 
-
+// adding parts to the blue belt
 void *threadL(void *arg) {
-    int part_number;
 
-        while (fscanf(railway_car, "%d", &part_number) == 1) {
-            if (part_number == -1) {        // if it is EOF
-                Redput(-1);
-                Blueput(-1);
-                break;
-            }
-        
-            if (part_number >= 1 && part_number <= 12)  // move to conveyor Blue
+        // adding parts to the blue belt
+    for ( int i = 0; i < PARTS; i++) {
+        Blueput(i + 1);
+        usleep(250000); // sleep .25
+    }
 
-                Blueput(part_number);
-                usleep(250000);         // delay of.25 secomnds
-            } else {                    // moves to conveyor Red
-                Redput(part_number);
-                usleep(250000);         // delay of.25 secomnds
-            }
-        //usleep(250000);         // delay of.25 secomnds
-    
-
+    Blueput(-1);
     return NULL;
 }
 
+
+//adding parts to the red belt
 void *threadR(void *arg) {
-    int part_number;
-
-    while (fscanf(railway_car, "%d", &part_number) == 1) {
-        if (part_number == -1) {        // if it is EOF
-            Blueput(-1);
-            Redput(-1);     
-            break;
-        }
-        
-        if (part_number >= 13 && part_number <= 25) {       // moves to conveyor Red
-          
-            Redput(part_number);
-            usleep(250000);         // delay of.25 secomnds
-        } else {                // moves to conveyor Blue
-
-            Blueput(part_number);
-            usleep(250000);         // delay of.25 secomnds
-        }
-        //usleep(500000);     // delay of .50 seconds
+  
+    for (int i = 0; i < PARTS; i++) {
+        Redput(i + 1);
+        usleep(500000) // sleep .5
     }
 
+    Redput(-1);
     return NULL;
 }
 
