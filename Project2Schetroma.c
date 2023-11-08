@@ -5,6 +5,16 @@
 #include <pthread.h>
 #include <unistd.h>
 
+void Blueput(int part_number);
+void Redput (int part_number);
+int Blueget();
+int Redget();
+void *threadL(void *arg);
+void *threadR(void *arg);
+void *threadX(void *arg);
+void *threadY(void *arg);
+void writePart(char filename[], int part, int sequence);
+
 #define CONVEYOR_BLUE 15
 #define CONVEYOR_RED 10
 #define PARTS 25
@@ -16,12 +26,10 @@ int r_count = 0;
 int b_count = 0;
 //int fill_ptr = 0;
 //int use_ptr = 0;
-int count = 0;
 
-//pthread_mutex_t lock;
+// pthread_mutex_t lock;
 pthread_cond_t blue_not_full, blue_not_empty;
 pthread_cond_t red_not_full, red_not_empty;
-
 
 pthread_mutex_t blueLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t blueNotEmpty = PTHREAD_COND_INITIALIZER;
@@ -38,15 +46,43 @@ int sequence = 0;
 FILE *blue_delivery;
 FILE *red_delivery;
 
-void Blueput(int part_number);
-void Redput (int part_number);
-int Blueget();
-int Redget();
-void *threadL(void *arg);
-void *threadR(void *arg);
-void threadX(void *arg);
-void threadY(void *arg);
-void writePart(char filename[], int part, int sequence);
+
+
+
+
+int main(int argc, char *argv[]) {
+
+    pthread_t threadL, threadR, threadX, threadY;
+
+    pthread_create(&threadL, NULL, threadL, NULL);     // create blue and red threads
+    pthread_create(&threadR, NULL, threadR, NULL);
+    pthread_create(&threadX, NULL, threadX, NULL);
+    pthread_create(&threadY, NULL, threadY, NULL);
+
+    blue_delivery = fopen("BLUE_DELIVERY.txt", "w");
+    red_delivery = fopen("RED_DELIVERY.txt", "w");
+
+    pthread_join(threadL, NULL);            // wait for threads to finish
+    pthread_join(threadR, NULL);
+    pthread_join(threadX, NULL);
+    pthread_join(threadY, NULL);
+
+    fclose(blue_delivery);
+    fclose(red_delivery);
+
+return 0;
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 void Blueput(int part_number) {
@@ -106,12 +142,12 @@ int Redget() {
 
     pthread_mutex_lock(&redLock);      // set lock
 
-    while (count == 0) {                  // if conveyor is empty wait
+    while (r_count == 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&red_not_empty, &redLock);
     }
 
-    part_number = redBelt[count - 1];         // retrieve part number from buffer
-    count--;
+    part_number = redBelt[r_count - 1];         // retrieve part number from buffer
+    r_count--;
     printf("Retrieved part from Red belt.\n");
 
 
@@ -147,7 +183,7 @@ void *threadR(void *arg) {
     return NULL;
 }
 
-void threadX(void *arg) {
+void *threadX(void *arg) {
     int part_number;
     while (1) {
         part_number = Blueget();
@@ -161,7 +197,7 @@ void threadX(void *arg) {
 
 }
 
-void threadY(void *arg) {
+void *threadY(void *arg) {
     int part_number;
     while(1) {
         part_number = Redget();
@@ -187,26 +223,5 @@ void writePart(char filename[], int part, int sequence) {
 }
 
 
-int main(int argc, char *argv[]) {
-
-    pthread_t threadL, threadR, threadX, threadY;
-
-    pthread_create(&threadL, NULL, &threadL, NULL);     // create blue and red threads
-    pthread_create(&threadR, NULL, &threadR, NULL);
-    pthread_create(&threadX, NULL, &threadX, NULL);
-    pthread_create(&threadY, NULL, &threadY, NULL);
-
-    blue_delivery = fopen("BLUE_DELIVERY.txt", "w");
-    red_delivery = fopen("RED_DELIVERY.txt", "w");
-
-    pthread_join(threadL, NULL);            // wait for threads to finish
-    pthread_join(threadR, NULL);
-    pthread_join(threadX, NULL);
-    pthread_join(threadY, NULL);
-
-    fclose(blue_delivery);
-    fclose(red_delivery);
-
-return 0;
 
 }
