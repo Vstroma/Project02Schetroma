@@ -145,7 +145,7 @@ int Redget() {
 }
 
 // adding parts to the blue belt
-void *threadL(void *arg) {
+void *threadLF(void *arg) {
 
         // adding parts to the blue belt
     for ( int i = 0; i < PARTS; i++) {
@@ -159,7 +159,7 @@ void *threadL(void *arg) {
 
 
 //adding parts to the red belt
-void *threadR(void *arg) {
+void *threadRF(void *arg) {
   
     for (int i = 0; i < PARTS; i++) {
         Redput(i + 1);
@@ -170,7 +170,7 @@ void *threadR(void *arg) {
     return NULL;
 }
 
-void *threadX(void *arg) {
+void *threadXF(void *arg) {
     int part_number;
     while (1) {
         part_number = Blueget();
@@ -184,7 +184,7 @@ void *threadX(void *arg) {
 
 }
 
-void *threadY(void *arg) {
+void *threadYF(void *arg) {
     int part_number;
     while(1) {
         part_number = Redget();
@@ -208,3 +208,5 @@ void writePart(char filename[], int part, int sequence) {
         printf("Error: Couldn't open delivery truck file %s\n", filename);
     }
 }
+
+
