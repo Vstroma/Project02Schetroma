@@ -49,21 +49,26 @@ FILE *red_delivery;
 
 int main() {
 
+    //initialize threads
     pthread_t threadL, threadR, threadX, threadY;
 
-    pthread_create(&threadL, NULL, threadLF, NULL);     // create blue and red threads
+    // creates threadL, threadR, threadX and threadY
+    pthread_create(&threadL, NULL, threadLF, NULL);     
     pthread_create(&threadR, NULL, threadRF, NULL);
     pthread_create(&threadX, NULL, threadXF, NULL);
     pthread_create(&threadY, NULL, threadYF, NULL);
 
+    //open files for writing
     blue_delivery = fopen("BLUE_DELIVERY.txt", "w");
     red_delivery = fopen("RED_DELIVERY.txt", "w");
 
-    pthread_join(threadL, NULL);            // wait for threads to finish
+    // waits for threads to finish
+    pthread_join(threadL, NULL);            
     pthread_join(threadR, NULL);
     pthread_join(threadX, NULL);
     pthread_join(threadY, NULL);
 
+    //closes the files
     fclose(blue_delivery);
     fclose(red_delivery);
 
@@ -73,73 +78,89 @@ return 0;
 
 
 void Blueput(int part_number) {
-    pthread_mutex_lock(&blueLock);          // set lock
+     // set lock
+    pthread_mutex_lock(&blueLock);         
     
-    while (b_count == CONVEYOR_BLUE) {              // if conveyor is full wait
+    // if the blue conveyor is full wait
+    while (b_count == CONVEYOR_BLUE) {             
         pthread_cond_wait(&blueNotFull, &blueLock);
     }
     
+    //adds a part to the blue conveyor and increments the sequence
     blue_belt[b_count] = part_number;
     b_count++;   
     sequence++;             
     printf("Part added to Blue belt.\n");             
 
-    pthread_cond_signal(&blueNotEmpty);       // signal not empty
-    pthread_mutex_unlock(&blueLock);              // release lock
+    //signal that the blue conveyor is not empty and release the lock
+    pthread_cond_signal(&blueNotEmpty);       
+    pthread_mutex_unlock(&blueLock);              
 }
 
 void Redput (int part_number) {
-    pthread_mutex_lock(&redLock);          // set lock
+    // set lock
+    pthread_mutex_lock(&redLock);
     
-    while (r_count == CONVEYOR_RED) {               // if conveyor is full wait
+    //if the red conveyor is full wait
+    while (r_count == CONVEYOR_RED) {
         pthread_cond_wait(&redNotFull, &redLock);
     }
     
+    //adds a part to the red conveyor and increments the sequence
     red_belt[r_count] = part_number;
     r_count++;  
     sequence++;  
     printf("Part added to Red belt.\n");                      
 
-
-    pthread_cond_signal(&redNotEmpty);        // signal not empty
-    pthread_mutex_unlock(&redLock);        // release lock
+    //signal that the red conveyor is not empty and release the lock
+    pthread_cond_signal(&redNotEmpty);     
+    pthread_mutex_unlock(&redLock);     
 }
 
 int Blueget() {
-    int part_number;                // initialize part number
+     // initialize part number
+    int part_number;         
 
-    pthread_mutex_lock(&blueLock);              // set lock
+    //sets lock
+    pthread_mutex_lock(&blueLock); 
 
-    while (b_count == 0) {                  // if conveyor is empty wait
+    // if blue count is empty, wait
+    while (b_count == 0) {             
         pthread_cond_wait(&blueNotEmpty, &blueLock);
     }
 
-    part_number = blue_belt[b_count - 1];            // retrieve part number from buffer
+    // get a part from the blue conveyor and update the count
+    part_number = blue_belt[b_count - 1];       
     b_count--;
     printf("Retrieved part from Blue belt.\n");
 
-    pthread_cond_signal(&blueNotFull);        // signal not full
-    pthread_mutex_unlock(&blueLock);        // release lock
+    // signal the blue conveyor is not full and release the lock
+    pthread_cond_signal(&blueNotFull);      
+    pthread_mutex_unlock(&blueLock);     
 
     return part_number;
 }
 
 int Redget() {
-    int part_number;            // initialize part number
+    // initialize part number
+    int part_number;  
 
-    pthread_mutex_lock(&redLock);      // set lock
+    // set lock
+    pthread_mutex_lock(&redLock);
 
-    while (r_count == 0) {                  // if conveyor is empty wait
+    // if red cound is empty, wait
+    while (r_count == 0) {  
         pthread_cond_wait(&redNotEmpty, &redLock);
     }
 
-    part_number = red_belt[r_count - 1];         // retrieve part number from buffer
+    // get a part from the red conveyor and update the count
+    part_number = red_belt[r_count - 1];   
     r_count--;
     printf("Retrieved part from Red belt.\n");
 
-
-    pthread_cond_signal(&redNotFull);            // signal not full
-    pthread_mutex_unlock(&redLock);                // release lock
+    // signal the red conveyor is not full and release the lock
+    pthread_cond_signal(&redNotFull);   
+    pthread_mutex_unlock(&redLock);  
 
     return part_number;
 }
@@ -147,12 +168,13 @@ int Redget() {
 // adding parts to the blue belt
 void *threadLF(void *arg) {
 
-        // adding parts to the blue belt
+    // add blue parts to the blue belt
     for ( int i = 0; i < PARTS; i++) {
         Blueput(i + 1);
         usleep(250000); // sleep .25
     }
 
+    // -1 to indicate the end of blue parts
     Blueput(-1);
     return NULL;
 }
@@ -161,11 +183,13 @@ void *threadLF(void *arg) {
 //adding parts to the red belt
 void *threadRF(void *arg) {
   
+  // add red parts to the red belt
     for (int i = 0; i < PARTS; i++) {
         Redput(i + 1);
         usleep(500000); // sleep .5
     }
 
+    //-1 to indicate the end of red parts
     Redput(-1);
     return NULL;
 }
@@ -174,11 +198,14 @@ void *threadXF(void *arg) {
     int part_number;
     while (1) {
         part_number = Blueget();
-        if (part_number == -1) {        // exit when -1
+
+        // exit this thread when -1 is given
+        if (part_number == -1) {     
             break;
         }
+        //writes the blue part to the delivery file
         writePart("Blue_delivery.txt",part_number, sequence);   // write part to blue file 
-        usleep(200000); // process time
+        usleep(200000); // sleep for .2 (process time)
     }
     return NULL;
 
@@ -188,11 +215,14 @@ void *threadYF(void *arg) {
     int part_number;
     while(1) {
         part_number = Redget();
-        if (part_number == -1) {           // exit when -1
+
+        //exit this thread when -1 is given
+        if (part_number == -1) {
             break;
         }
+        //writes the red part to the delivery file
         writePart("Red_delivery.txt",part_number,sequence);
-        usleep(200000); // process time
+        usleep(200000); // sleep for .2 (process time)
     }
 
     return NULL;
@@ -200,13 +230,22 @@ void *threadYF(void *arg) {
 
 // write part to the delivery truck file
 void writePart(char filename[], int part, int sequence) {
+    //open delivery truck file to append
     FILE *deliveryTruckFile = fopen(filename, "a");
+
+    //if the file opened 
     if (deliveryTruckFile) {
+
+        // writes to the file with the sequence and part information
         fprintf(deliveryTruckFile, "Sequence: %d, Part: %d\n", sequence, part);
+        
         fclose(deliveryTruckFile);
     } else {
         printf("Error: Couldn't open delivery truck file %s\n", filename);
     }
+}
+
+
 }
 
 
