@@ -9,12 +9,11 @@
 #define CONVEYOR_RED 10
 #define PARTS 25
 
+int blue_belt[CONVEYOR_BLUE];
+int red_belt[CONVEYOR_RED];
 
-
-int blue_belt[CONVEYOR_BLUE]
-int red_belt[CONVEYOR_RED]
-int b_count = 0;
 int r_count = 0;
+int b_count = 0;
 //int fill_ptr = 0;
 //int use_ptr = 0;
 int count = 0;
@@ -31,8 +30,8 @@ pthread_mutex_t redLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t redNotEmpty = PTHREAD_COND_INITIALIZER;
 pthread_cond_t redNotFull = PTHREAD_COND_INITIALIZER;
 
-int blueBelt{CONVEYOR_BLUE};
-int redBelt{CONVEYOR_RED};
+int blueBelt[CONVEYOR_BLUE];
+int redBelt[CONVEYOR_RED];
 
 int sequence = 0;
 
@@ -107,12 +106,12 @@ int Redget() {
 
     pthread_mutex_lock(&redLock);      // set lock
 
-    while (r_count == 0) {                  // if conveyor is empty wait
+    while (count == 0) {                  // if conveyor is empty wait
         pthread_cond_wait(&red_not_empty, &redLock);
     }
 
-    part_number = redBelt[r_count - 1];         // retrieve part number from buffer
-    r_count--;
+    part_number = redBelt[count - 1];         // retrieve part number from buffer
+    count--;
     printf("Retrieved part from Red belt.\n");
 
 
@@ -141,7 +140,7 @@ void *threadR(void *arg) {
   
     for (int i = 0; i < PARTS; i++) {
         Redput(i + 1);
-        usleep(500000) // sleep .5
+        usleep(500000); // sleep .5
     }
 
     Redput(-1);
@@ -166,7 +165,7 @@ void threadY(void *arg) {
     int part_number;
     while(1) {
         part_number = Redget();
-        it (part_number == -1) {           // exit when -1
+        if (part_number == -1) {           // exit when -1
             break;
         }
         writePart("Red_delivery.txt",part_number,sequence);
@@ -197,18 +196,17 @@ int main(int argc, char *argv[]) {
     pthread_create(&threadX, NULL, &threadX, NULL);
     pthread_create(&threadY, NULL, &threadY, NULL);
 
-    blueDelivery = fopen("BLUE_DELIVERY.txt", "w");
-    redDelivery = fopen("RED_DELIVERY.txt", "w");
+    blue_delivery = fopen("BLUE_DELIVERY.txt", "w");
+    red_delivery = fopen("RED_DELIVERY.txt", "w");
 
     pthread_join(threadL, NULL);            // wait for threads to finish
     pthread_join(threadR, NULL);
     pthread_join(threadX, NULL);
     pthread_join(threadY, NULL);
 
-    fclose(blueDelivery);
-    fclose(redDelivery);
+    fclose(blue_delivery);
+    fclose(red_delivery);
 
 return 0;
 
 }
-
